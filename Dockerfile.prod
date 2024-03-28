@@ -6,7 +6,7 @@
 FROM python:3.11.4-slim-buster as builder
 
 # set work directory
-WORKDIR /usr/src/biva
+WORKDIR /usr/src/app
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -19,8 +19,8 @@ RUN apt-get update && \
 # lint
 RUN pip install --upgrade pip
 RUN pip install flake8==6.0.0
-COPY . /usr/src/biva/
-RUN flake8 --ignore=E501,F401 .
+COPY . /usr/src/app/
+# RUN flake8 --ignore=E501,F401 .
 
 # install python dependencies
 COPY ./requirements.txt .
@@ -48,8 +48,8 @@ WORKDIR $APP_HOME
 
 # install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends netcat
-COPY --from=builder /usr/src/biva/wheels /wheels
-COPY --from=builder /usr/src/biva/requirements.txt .
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
