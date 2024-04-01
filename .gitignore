@@ -1,6 +1,6 @@
-./.env.dev
-./biva-env
-./env.prod
-./env.prod.db
-*.pyc
-__pycache
+/.env.dev
+/biva-env
+/.env.prod
+/.env.prod.db
+/*.pyc
+/__pycache
