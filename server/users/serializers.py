@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from .models import BeautyProfessionalMore, BusinessOwner, BeautyProfessional, BusinessOwnerMore, RetailCustomer
 from djoser.serializers import UserCreateSerializer
@@ -62,7 +63,7 @@ class BusinessOwnerMoreSerializer(serializers.ModelSerializer):
         model = BusinessOwnerMore
         fields = ('business_name', 'rating')
 
-class BusinessOwnerSerializer(serializers.ModelSerializer):
+class BusinessOwnerSerializer(CustomModelSerializer):
     more = BusinessOwnerMoreSerializer()
 
     class Meta:
@@ -124,9 +125,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     def perform_create(self, validated_data):
         with transaction.atomic():
             user = create_user_by_type(**validated_data)
-            # if settings.SEND_ACTIVATION_EMAIL:
-            #     user.is_active = False
-            #     user.save(update_fields=["is_active"])
+            if settings.SEND_ACTIVATION_EMAIL:
+                user.is_active = False
+                user.save(update_fields=["is_active"])
         return user
     
 

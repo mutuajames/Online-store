@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 import uuid
@@ -119,3 +120,12 @@ class RetailCustomer(User):
         self.user_type = User.Types.retail_customer
         return super().save(*args, **kwargs)
     
+
+# class Profile(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    
+#     # Other profile fields
+
+#     def __str__(self):
+#         return f'{self.user.username} Profile' #show how we want it to be displayed
