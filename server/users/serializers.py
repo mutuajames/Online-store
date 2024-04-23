@@ -1,11 +1,9 @@
 from django.conf import settings
 from django.db import IntegrityError, transaction
-from .models import BeautyProfessionalMore, BusinessOwner, BeautyProfessional, BusinessOwnerMore, RetailCustomer
+from .models import BeautyProfessionalMore, BusinessOwner, BeautyProfessional, BusinessOwnerMore, RetailCustomer, Profile
 from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
-# from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
 from rest_framework import serializers
-# from .models import RetailCustomer, BusinessOwner, BeautyProfessional
 from rest_framework.serializers import raise_errors_on_nested_writes, ModelSerializer
 from rest_framework.utils import model_meta
 from rest_framework.exceptions import ParseError
@@ -18,18 +16,23 @@ def create_user_by_validated_data(user: User, user_more=None, **validated_data: 
     if not user_more:
         return user.objects.create_user(**validated_data)
 
-    extra_fields, validated_data = retrieve_extra_fields(**validated_data)
-    print(user)
+    extra_fields, profile_fields, validated_data = retrieve_extra_fields(**validated_data)
+    
     user = user.objects.create_user(**validated_data)
     user_more.objects.create(user=user, **extra_fields)
-    print(user)
-    print("Extra fields:", extra_fields)
+    Profile.objects.create(user=user, **profile_fields)
+
     return user
 
 
 def retrieve_extra_fields(**validated_data):
     extra_fields = validated_data.pop('more')
-    return extra_fields, validated_data
+    profile_fields = validated_data.pop('profile')
+    return extra_fields, profile_fields, validated_data
+
+def retrieve_extra_fields_retail(**validated_data):
+    profile_fields = validated_data.pop('profile')
+    return profile_fields, validated_data
 
 class CustomModelSerializer(ModelSerializer):
     def update(self, instance, validated_data):
@@ -58,6 +61,11 @@ class CustomModelSerializer(ModelSerializer):
 
         return instance
 
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ('bio', 'birth_date', 'image')
+
 class BusinessOwnerMoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusinessOwnerMore
@@ -65,13 +73,51 @@ class BusinessOwnerMoreSerializer(serializers.ModelSerializer):
 
 class BusinessOwnerSerializer(CustomModelSerializer):
     more = BusinessOwnerMoreSerializer()
+    profile = ProfileSerializer()
 
     class Meta:
         model = BusinessOwner
-        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number', 'more')
+        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number', 'more', 'profile')
 
     def create(self, validated_data):
         return create_user_by_validated_data(BusinessOwner, BusinessOwnerMore, **validated_data)
+    
+    def update(self, instance, validated_data):
+        print("validated data when uploading before: ", validated_data)
+
+        more_data, profile_data, validated_data = retrieve_extra_fields(**validated_data)
+
+        print("validated data when uploading after: ", validated_data)
+
+        for field in self.Meta.fields:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+
+        # Update more_data fields if they exist
+        if more_data:
+            # Assuming `more` is a dictionary containing data for a MoreModel instance
+            # Retrieve business_name and rating from the dictionary
+            business_name = more_data.get('business_name')
+            rating = more_data.get('rating')
+            # Update instance with business_name and rating
+            instance.more.business_name = business_name
+            instance.more.rating = rating
+            instance.more.save()
+
+        # Update profile_data fields if they exist
+        if profile_data:
+            # Assuming `profile` is a dictionary containing data for a ProfileModel instance
+            # Retrieve bio, birth_date, and image from the dictionary
+            bio = profile_data.get('bio')
+            birth_date = profile_data.get('birth_date')
+            image = profile_data.get('image')
+            # Update instance's profile with bio, birth_date, and image
+            instance.profile.bio = bio
+            instance.profile.birth_date = birth_date
+            instance.profile.image = image
+            instance.profile.save()
+
+        return instance
 
 
 class BeautyProfessionalMoreSerializer(serializers.ModelSerializer):
@@ -81,24 +127,91 @@ class BeautyProfessionalMoreSerializer(serializers.ModelSerializer):
 
 class BeautyProfessionalSerializer(CustomModelSerializer):
     more = BeautyProfessionalMoreSerializer()
+    profile = ProfileSerializer()
 
     class Meta:
         model = BeautyProfessional
-        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number', 'more')
+        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number', 'more', 'profile')
 
     def create(self, validated_data):
         print("BeautyProfessionalSerializer create input:", validated_data)
 
         return create_user_by_validated_data(BeautyProfessional, BeautyProfessionalMore, **validated_data)
+    
+    def update(self, instance, validated_data):
+        more_data, profile_data, validated_data = retrieve_extra_fields(**validated_data)
+
+        for field in self.Meta.fields:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+
+        # Update more_data fields if they exist
+        if more_data:
+            # Assuming `more` is a dictionary containing data for a MoreModel instance
+            # Retrieve business_name and rating from the dictionary
+            rating = more_data.get('rating')
+            experience_level = more_data.get('experience_level')
+            availability = more_data.get('availability')
+            # Update instance with business_name and rating
+            instance.more.rating = rating
+            instance.more.experience_level = experience_level
+            instance.more.availability = availability
+            instance.more.save()
+
+        # Update profile_data fields if they exist
+        if profile_data:
+            # Assuming `profile` is a dictionary containing data for a ProfileModel instance
+            # Retrieve bio, birth_date, and image from the dictionary
+            bio = profile_data.get('bio')
+            birth_date = profile_data.get('birth_date')
+            image = profile_data.get('image')
+            # Update instance's profile with bio, birth_date, and image
+            instance.profile.bio = bio
+            instance.profile.birth_date = birth_date
+            instance.profile.image = image
+            instance.profile.save()
+
+        return instance
 
 class RetailCustomerSerializer(CustomModelSerializer):
+    profile = ProfileSerializer()
+
     class Meta:
         model = RetailCustomer
-        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number')
+        fields = ('id', 'first_name', 'last_name', 'email', 'location', 'user_type', 'phone_number', 'profile')
 
     def create(self, validated_data):
-        return create_user_by_validated_data(RetailCustomer, **validated_data)
+        print("Validated fields before: ", validated_data)
 
+        profile_fields, validated_data = retrieve_extra_fields_retail(**validated_data)
+        print("Profile fields: ", profile_fields)
+        print("Validated fields after: ", validated_data)
+        retail_customer = RetailCustomer.objects.create_user(**validated_data)
+        Profile.objects.create(user=retail_customer, **profile_fields)
+
+        return retail_customer
+
+    def update(self, instance, validated_data):
+        profile_data, validated_data = retrieve_extra_fields_retail(**validated_data)
+
+        for field in self.Meta.fields:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+
+        # Update profile_data fields if they exist
+        if profile_data:
+            # Assuming `profile` is a dictionary containing data for a ProfileModel instance
+            # Retrieve bio, birth_date, and image from the dictionary
+            bio = profile_data.get('bio')
+            birth_date = profile_data.get('birth_date')
+            image = profile_data.get('image')
+            # Update instance's profile with bio, birth_date, and image
+            instance.profile.bio = bio
+            instance.profile.birth_date = birth_date
+            instance.profile.image = image
+            instance.profile.save()
+
+        return instance
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -131,7 +244,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         return user
     
 
-_USER_TYPES = {  # only these users can create products
+_USER_TYPES = {
     'Business Owner': (BusinessOwner, BusinessOwnerMore),
     'Beauty Professional': (BeautyProfessional, BeautyProfessionalMore),
     'Retail Customer': (RetailCustomer),

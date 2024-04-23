@@ -17,6 +17,7 @@ mypy-extensions==1.0.0
 oauthlib==3.2.2
 packaging==24.0
 pathspec==0.12.1
+pillow==10.3.0
 platformdirs==4.2.0
 psycopg2-binary==2.9.9
 pycparser==2.22
@@ -27,5 +28,6 @@ requests-oauthlib==2.0.0
 social-auth-app-django==5.4.0
 social-auth-core==4.5.3
 sqlparse==0.4.4
+tomli==2.0.1
 typing_extensions==4.10.0
 urllib3==2.2.1

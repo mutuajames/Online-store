@@ -65,8 +65,7 @@ class BeautyProfessionalManager(CustomUserManager):
 class RetailManager(CustomUserManager):
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(user_type=User.Types.retail_customer)
-
-
+    
 class BusinessOwnerMore(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     business_name = models.CharField(max_length=255)
@@ -79,6 +78,10 @@ class BusinessOwner(User):
     @property
     def more(self):
         return self.businessownermore
+    
+    @property
+    def user_profile(self):
+        return self.profile
 
     class Meta:
         proxy = True
@@ -96,11 +99,15 @@ class BeautyProfessionalMore(models.Model):
 
 
 class BeautyProfessional(User):
-    objects = BeautyProfessionalManager()  
+    objects = BeautyProfessionalManager()
 
     @property
     def more(self):
         return self.beautyprofessionalmore
+    
+    @property
+    def user_profile(self):
+        return self.profile
 
     class Meta:
         proxy = True
@@ -111,7 +118,11 @@ class BeautyProfessional(User):
     
 
 class RetailCustomer(User):
-    objects = RetailManager() 
+    objects = RetailManager()
+
+    @property
+    def user_profile(self):
+        return self.profile 
 
     class Meta:
         proxy = True
@@ -120,12 +131,11 @@ class RetailCustomer(User):
         self.user_type = User.Types.retail_customer
         return super().save(*args, **kwargs)
     
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(max_length=500, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
 
-# class Profile(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     image = models.ImageField(default='default.jpg', upload_to='profile_pics')
-    
-#     # Other profile fields
-
-#     def __str__(self):
-#         return f'{self.user.username} Profile' #show how we want it to be displayed
+    def __str__(self):
+        return f"{self.user.email}'s profile"
