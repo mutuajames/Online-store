@@ -123,7 +123,7 @@ class BusinessOwnerSerializer(CustomModelSerializer):
 class BeautyProfessionalMoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = BeautyProfessionalMore
-        fields = ('rating', 'experience_level', 'availability')
+        fields = ('rating', 'experience_level', 'availability', 'service_category')
 
 class BeautyProfessionalSerializer(CustomModelSerializer):
     more = BeautyProfessionalMoreSerializer()
@@ -152,10 +152,12 @@ class BeautyProfessionalSerializer(CustomModelSerializer):
             rating = more_data.get('rating')
             experience_level = more_data.get('experience_level')
             availability = more_data.get('availability')
+            service_category = more_data.get('service_category')
             # Update instance with business_name and rating
             instance.more.rating = rating
             instance.more.experience_level = experience_level
             instance.more.availability = availability
+            instance.more.service_category = service_category
             instance.more.save()
 
         # Update profile_data fields if they exist

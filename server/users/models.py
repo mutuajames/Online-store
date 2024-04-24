@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 import uuid
-
+from services.models import ServiceCategory
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, user_type=None, **extra_fields):
@@ -96,6 +96,7 @@ class BeautyProfessionalMore(models.Model):
     rating = models.FloatField(default=0.0)
     experience_level = models.IntegerField(default=0)
     availability = models.TextField(blank=True)
+    service_category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, default=None, null=True, blank=True)
 
 
 class BeautyProfessional(User):
