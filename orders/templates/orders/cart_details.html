@@ -1,0 +1,45 @@
+{% extends 'Users/base.html' %}
+
+{% block content %}
+  <h1>Your Cart</h1>
+
+  {% if cart.cart_items.all %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Total</th>
+          <th>Modify</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cart_item in cart_items %}
+          <tr>
+            {% if cart_item.stock %}
+                <td>{{ cart_item.item.item_title }}</td>
+            {% else %}
+                <td>{{ cart_item.item.item_title }}*</td>
+            {% endif %}
+            <td>{{ cart_item.quantity }}</td>
+            <td>${{ cart_item.item.selling_price }}</td>
+            <td>${{ cart_item.total_iprice }}</td>
+            <td><a class="btn btn-primary btn-sm" href="{% url 'add-to-cart' cart_item.item.pk %}">Modify</a></td>
+            <td><a href="{% url 'removed-item' cart_item.pk %}">x</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <h6 class="card-subtitle mb-2 text-muted text-lg-right">* indicates that the stock is lesser than the quantity!</h6>
+    <h3>Total: ${{ cart.calculate_bill }}</h3>
+    {% if cart.savings %}
+    <h5>You will save ${{ cart.savings }} on this order! </h5>
+    {% endif %}
+    <a href="{% url 'create-order' %}" class="btn btn-success">Proceed to Checkout</a>
+
+  {% else %}
+    <p>Your cart is empty.</p>
+  {% endif %}
+
+{% endblock %}
